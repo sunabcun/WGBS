@@ -1,0 +1,208 @@
+---
+title: "DSS"
+---
+
+```{r, include = T}
+library(DSS)
+library(bsseq)
+library(gdata)
+library(dplyr)
+library(kableExtra)
+library(ggplot2)
+library(knitr)
+library(ff)
+
+#install.packages("gdata")
+#BiocManager::install("DSS")
+```
+
+```{r echo=FALSE}
+colFmt = function(x,color){
+  outputFormat = opts_knit$get("rmarkdown.pandoc.to")
+  if(outputFormat == 'latex')
+    paste("\\textcolor{",color,"}{",x,"}",sep="")
+  else if(outputFormat == 'html')
+    paste("<font color='",color,"'>",x,"</font>",sep="")
+  else
+    x
+}
+```
+
+### Preprocessing
+
+```{r echo=TRUE}
+# get sample names
+getwd()
+samples <- read.table(file="./allsamples.txt", sep="\t", header=F, stringsAsFactors=F)$V1
+# read in methylation data in tab delimited format: <chromosome> <position> <count total> <count methylated>
+dat.list <- vector(mode = "list", length = length(samples))
+```
+
+```{r}
+gc()
+memory.limit(36000)
+#getOption("fftempdir")
+#options(fftempdir = "D:/fftemp")
+#getwd()
+#dat.list[[12]] <- read.table.ffdf(x = NULL, file = paste0("./counts/P16-1.CpG.counts.txt"), 
+                         #         header = F,
+                          #        sep = "\t")
+
+#colnames(dat.list[[14]]) <- c("chr", "pos", "N", "X")
+#dat.list[[13]]
+for (i in 1:length(samples)){
+        dat.list[[i]] <- read.table(paste0("./", samples[i], ".CpG.counts.txt"), header=F, col.names=c("chr", "pos", "N", "X"))
+}
+
+
+
+#for (i in 1:length(samples)){
+ #       dat.list[[i]] <- read.table.ffdf(x = NULL, file = paste0("./counts/", samples[i], ".CpG.counts.txt"), header=F, sep = "\t")
+  #      colnames(dat.list[[i]]) <- c("chr", "pos", "N", "X")
+#}
+gc()
+# create BSseqData and save for future easy loading
+BSobj <- makeBSseqData(dat.list, samples)
+save(BSobj, file="BSobj.RData")
+
+```
+
+```{r}
+load("BSobj.RData")
+```
+
+The original data included `r dim(BSobj)[1]` CpG sites across all samples.
+
+
+```{r echo=TRUE}
+# remove unplaced contigs from reference
+chr.use <- paste0("chr", c(1:22, "M", "X", "Y"))
+dat <- chrSelectBSseq(BSobj, seqnames= chr.use, order=T)
+```
+
+CpG sites from unplaced contigs were removed, leaving `r dim(dat)[1]` CpG sites.
+Multidimensional scaling (MDS) plot of raw methylation data.
+```{r echo=TRUE}
+# generate meta data from samples
+stage <- c(rep("HDFs", 8), rep("Keloids", 12))
+pdata <- data.frame(Samples=samples, EM.stage=stage, stringsAsFactors=F)
+pdata$EM.stage <- factor(pdata$EM.stage, levels=c("HDFs", "Keloids"))
+#idx <- match(samples, pdata$Samples)
+#pdata <- pdata[idx,]
+
+#pchs <- ifelse(pdata$EM.stage == "HDFs", 15, 16)
+#
+# MDS plot of raw methylation percentages
+pct.meth <- getMeth(dat, type = "raw")
+#limma::plotMDS(asin(pct.meth), col = "blue", pch = pchs)
+#legend("bottomright", title = "EM.stage", legend = levels(pdata$EM.stage), pch = unique(pchs), text.font = 0.8)
+
+PC_MDS <- function(dat, tit) {
+  dev.new()
+  mds <- data.frame(limma::plotMDS(dat))
+  
+  mds$lib.name <- rownames(mds)
+  p <- ggplot(mds, aes(x = x, y = y, label = lib.name,
+                       color = pdata$EM.stage)) +
+    geom_point(size = 4) + geom_text(hjust = 0.5, vjust = -0.5) + theme_bw() +
+    xlab(label = "LogFC Dimension1") + ylab(label = "LogFC Dimension 2") +
+    ggtitle(tit) + scale_color_manual(name = "Conditions", 
+                                      values = c("steelblue3", "tomato3"))
+  png(filename = 'MDSplot for EMseq.png',
+    width = 30/2.54,height = 20/2.54,units = 'in',res = 300)
+  print(p)
+  dev.off()
+}
+PC_MDS(asin(pct.meth), "MDS plot for EM-seq")
+
+```
+
+
+### Differential methylation analyses
+Differential methylation analyses were conducted in [DSS](https://www.bioconductor.org/packages/release/bioc/manuals/DSS/man/DSS.pdf) bioconductor package.
+
+##### Comparison EM.24M vs EM.3M
+Wald test was used.
+
+#### Output files include the following:
+
+* mu1, mu2: group means
+
+* diff, diff.se: differece between group means and the standard error of differences
+
+* stat: hypothesis test statistics (Wald test)
+
+* phi1, phi2: dispersions
+
+* pvals: Raw p-value from test that the methylation difference differs from 0
+
+* fdrs: Benjamini-Hochberg false discovery rate (FDR) adjusted p-value
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+# run test of differential methylation for each CpG site and save for future easy loading
+dmlTest <- DMLtest(BSobj, group1=samples[1:8], group2=samples[9:20], smoothing=TRUE)
+save(dmlTest, file="DML.RData")
+#load("DML.RData")
+
+# call differential methylated CpG
+dmls <- callDML(dmlTest, p.threshold=1.0)
+# write to file results
+write.table(dmls, file="Differential_methylation_CpG_KeloidsvsHDFs.txt", sep="\t", col.names=T, row.names=F, quote=F)
+
+```
+
+<br>
+
+
+```{r echo = FALSE}
+# list the top 500 differentially methylated CpG sites (ordered by P values)
+n <- ncol(dmls)
+header1 <- n
+names(header1) <- paste0("Number of differentially methylated CpGs with FDR adjusted P < 0.05 = ", length(which(dmls$fdr < 0.05)))
+header2 <- n
+names(header2) <- "Top 500 CpG sites"
+kable(dmls[1:500,], align = 'c', row.names=F) %>%
+  add_header_above(header1, align = 'l') %>%
+  add_header_above(header2, font_size = "larger", bold = T, align = "l") %>%
+  kable_styling(bootstrap_options = c("hover", "condensed", "responsive"), full_width = T) %>%
+  scroll_box(height = "500px")
+```
+
+```{r echo = FALSE}
+# call differentially methylated regions (DMR)
+dmrs <- callDMR(dmlTest, delta=0.1, p.threshold=0.01)
+write.table(dmrs, file="Differential_methylation_regions_KeloidsvsHDFs.txt", sep="\t", col.names=T, row.names=F, quote=F)
+```
+
+```{r echo = FALSE}
+# list DMRs
+n <- ncol(dmrs)
+header1 <- n
+names(header1) <- paste0("Number of differentially methylated regions = ", nrow(dmrs))
+header2 <- n
+names(header2) <- "The list of DMRs:"
+kable(dmrs, align = 'c', row.names=F) %>%
+  add_header_above(header1, align = 'l') %>%
+  add_header_above(header2, font_size = "larger", bold = T, align = "l") %>%
+  kable_styling(bootstrap_options = c("hover", "condensed", "responsive"), full_width = T) %>%
+  scroll_box(height = "500px")
+```
+
+##### Visualization of individual DMR
+
+```{r echo=FALSE}
+t <- showOneDMR(dmrs[1,], BSobj)
+png(filename = 'DMR vis1.png',
+    width = 30/2.54,height = 20/2.54,units = 'in',res = 300)
+print(t)
+dev.off()
+
+```
+
+
+
+# Session info {.unnumbered}
+
+```{r sessionInfo, echo=FALSE}
+sessionInfo()
+```
