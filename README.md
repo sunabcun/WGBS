@@ -42,4 +42,8 @@ A program to map bisulfite treated sequencing reads to a genome of interest and 
   - http://homer.ucsd.edu/homer/index.html
   - Annotating Regions in the Genome (annotatePeaks.pl)
     - perform Gene Ontology Analysis, genomic feature association analysis (Genome Ontology), associate peaks with gene expression data, calculate ChIP-Seq Tag densities from different experiments, and find motif occurrences in peaks.  annotatePeaks.pl can also be used to create histograms and heatmaps.
-
+  - homer.sh
+# 2) Deeptools
+- deepTools is a suite of python tools particularly developed for the efficient analysis of high-throughput sequencing data, such as ChIP-seq, RNA-seq or MNase-seq.
+- https://deeptools.readthedocs.io/en/latest/index.html
+- 
