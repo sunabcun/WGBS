@@ -13,20 +13,19 @@ fi
 
 conda activate my_env
 
-ID1=`head -n 1 allsamples.txt |tail -9`
-ID2=`head -n 2 allsamples.txt |tail -10`
-ID3=`head -n 3 allsamples.txt |tail -11`
-ID4=`head -n 4 allsamples.txt |tail -12`
-ID5=`head -n 5 allsamples.txt |tail -13`
-ID6=`head -n 6 allsamples.txt |tail -14`
-ID7=`head -n 7 allsamples.txt |tail -15`
-ID8=`head -n 8 allsamples.txt |tail -16`
-ID9=`head -n 9 allsamples.txt |tail -17`
-ID10=`head -n 10 allsamples.txt |tail -18`
-ID11=`head -n 11 allsamples.txt |tail -19`
-ID12=`head -n 12 allsamples.txt |tail -20`
+ID1=`head -n 9 allsamples.txt |tail -1`
+ID2=`head -n 10 allsamples.txt |tail -1`
+ID3=`head -n 11 allsamples.txt |tail -1`
+ID4=`head -n 12 allsamples.txt |tail -1`
+ID5=`head -n 13 allsamples.txt |tail -1`
+ID6=`head -n 14 allsamples.txt |tail -1`
+ID7=`head -n 15 allsamples.txt |tail -1`
+ID8=`head -n 16 allsamples.txt |tail -1`
+ID9=`head -n 17 allsamples.txt |tail -1`
+ID10=`head -n 18 allsamples.txt |tail -1`
+ID11=`head -n 19 allsamples.txt |tail -1`
+ID12=`head -n 20 allsamples.txt |tail -1`
 
-HDF1-1.HDF1-1_R1_bismark_bt2_pe.deduplicated.bedGraph.gz
 for name in ${ID1} ${ID2} ${ID3} ${ID4} ${ID5} ${ID6} ${ID7} ${ID8} ${ID9} ${ID10} ${ID11} ${ID12}
 do
   zcat ${inP}/${name}.${name}_R1_bismark_bt2_pe.deduplicated.bedGraph.gz |tail -n +2 - |sort -k1,1 -k2,2n - > ${inP}/${name}.input${name}_R1_bismark_bt2_pe.deduplicated.sorted.bedGraph
