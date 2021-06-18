@@ -1,5 +1,11 @@
 #!/bin/bash
 
+export baseP=/home/gunjanlab
+export homerP=$baseP/program/homer/bin
+export inP=$baseP/test/count/BedGraph
+export outP=$baseP/test/count/BedGraph/output
+export refP=$baseP/ref
+
 for i in *.gz; do
  zcat $i |tail -n +2 - |sort -k1,1 -k2,2n - > ${i%.bedGraph.gz}.sorted.bedGraph
  bedGraphToBigWig ${i%.bedGraph.gz}.sorted.bedGraph $refP/GRCh38.primary_assembly.genome.fa.fai $outP/${i%.bedGraph.gz}.bw
