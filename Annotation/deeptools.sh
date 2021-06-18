@@ -10,7 +10,7 @@ for i in *.gz; do
  zcat $i |tail -n +2 - |sort -k1,1 -k2,2n - > ${i%.bedGraph.gz}.sorted.bedGraph
  bedGraphToBigWig ${i%.bedGraph.gz}.sorted.bedGraph $refP/GRCh38.primary_assembly.genome.fa.fai $outP/${i%.bedGraph.gz}.bw
 done
-
+## SOme how sort was not working?
 for i in in *.bedGraph;do
 LC_COLLATE=C sort -k1,1 -k2,2n $i > ${i%.sorted.bedGraph}_sort2.bedGraph
 done
