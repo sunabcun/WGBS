@@ -44,6 +44,9 @@ A program to map bisulfite treated sequencing reads to a genome of interest and 
     - perform Gene Ontology Analysis, genomic feature association analysis (Genome Ontology), associate peaks with gene expression data, calculate ChIP-Seq Tag densities from different experiments, and find motif occurrences in peaks.  annotatePeaks.pl can also be used to create histograms and heatmaps.
   - homer.sh
 # 2) Deeptools
+CpG methylation indicates the regulation of gene expressions (higher methylation level at promoter regions = low or no gene expression). Check the methylation levels around gene transcription start sites (TSS) with the RNA gene expression data.
+- Generate the list of genes that are expressed (high) in the Keloids cells and genes that are not expressed (or low). 
+- Generate the bed file (chr name, start position, end position), easy way to generate this data will be using the Biomart from ensembl: http://useast.ensembl.org/biomart/martview/572471336eddcbe748e68eb94fb3c2ca
 - deepTools is a suite of python tools particularly developed for the efficient analysis of high-throughput sequencing data, such as ChIP-seq, RNA-seq or MNase-seq.
 - https://deeptools.readthedocs.io/en/latest/index.html
-- 
+- Use "computeMatrix" to generate methylation matrix around TSS for the samples of keloids cells.
