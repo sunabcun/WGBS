@@ -1,49 +1,37 @@
 #!/bin/bash
-#
-#SBATCH --time=1-00
-#SBATCH --nodes=1
-#SBATCH --ntasks=1 # Number of cores
-#SBATCH --mem=20000 # Memory pool for all cores (see also --mem-per-cpu)
-#SBATCH --partition=production # Partition to submit to
-#SBATCH --account=epigenetics
-#SBATCH --reservation=epigenetics-workshop # reservation to submit to
-#SBATCH --output=slurmout/dt-%j.out # File to which STDOUT will be written
-#SBATCH --error=slurmout/dt-%j.err # File to which STDERR will be written
 
-start=`date +%s`
-hostname
-
-aklog
-
-export baseP=/share/workshop/epigenetics_workshop/$USER/Methylation
-export inP=${baseP}/04-Methylation
-export outP=${baseP}/05-Deeptools
-export seqP=${baseP}/02-Cleaned
-export refP=${baseP}/References
-export cwd=${baseP}/scripts
-export tmpd=$cwd/tmp
+export baseP=/home/gunjanlab/
+export homerP=$baseP/program/homer/bin
+export inP=$baseP/test/count/BedGraph
+export outP=$baseP/test/count/BedGraph/output
+export refP = $baseP/ref
 
 
 if [ ! -d "${outP}" ]; then
    mkdir -p ${outP}
 fi
 
-if [ ! -d "${bamP}" ]; then
-   mkdir -p ${bamP}
-fi
+conda activate my_env
 
-module load deeptools/3.3.1
-module load kentutils/302.0.0
+ID1=`head -n 1 allsamples.txt |tail -9`
+ID2=`head -n 2 allsamples.txt |tail -10`
+ID3=`head -n 3 allsamples.txt |tail -11`
+ID4=`head -n 4 allsamples.txt |tail -12`
+ID5=`head -n 5 allsamples.txt |tail -13`
+ID6=`head -n 6 allsamples.txt |tail -14`
+ID7=`head -n 7 allsamples.txt |tail -15`
+ID8=`head -n 8 allsamples.txt |tail -16`
+ID9=`head -n 9 allsamples.txt |tail -17`
+ID10=`head -n 10 allsamples.txt |tail -18`
+ID11=`head -n 11 allsamples.txt |tail -19`
+ID12=`head -n 12 allsamples.txt |tail -20`
 
-ID1=`head -n 1 allsamples.txt |tail -1`
-ID2=`head -n 2 allsamples.txt |tail -1`
-ID3=`head -n 3 allsamples.txt |tail -1`
-
-for name in ${ID1} ${ID2} ${ID3}
+HDF1-1.HDF1-1_R1_bismark_bt2_pe.deduplicated.bedGraph.gz
+for name in ${ID1} ${ID2} ${ID3} ${ID4} ${ID5} ${ID6} ${ID7} ${ID8} ${ID9} ${ID10} ${ID11} ${ID12}
 do
-  zcat ${inP}/${name}.input${name}_R1_001_bismark_bt2_pe.deduplicated.bedGraph.gz |tail -n +2 - |sort -k1,1 -k2,2n - > ${inP}/${name}.input${name}_R1_001_bismark_bt2_pe.deduplicated.sorted.bedGraph
+  zcat ${inP}/${name}.${name}_R1_bismark_bt2_pe.deduplicated.bedGraph.gz |tail -n +2 - |sort -k1,1 -k2,2n - > ${inP}/${name}.input${name}_R1_bismark_bt2_pe.deduplicated.sorted.bedGraph
 
-  bedGraphToBigWig ${inP}/${name}.input${name}_R1_001_bismark_bt2_pe.deduplicated.sorted.bedGraph $refP/chr18.fa.fai ${outP}/${name}.input${name}_R1_001_bismark_bt2_pe.deduplicated.bw
+  bedGraphToBigWig ${inP}/${name}.${name}_R1_bismark_bt2_pe.deduplicated.sorted.bedGraph $refP/GRCh38.primary_assembly.genome.fa.fai ${outP}/${name}.${name}_R1_bismark_bt2_pe.deduplicated.bw
 
 done
 
