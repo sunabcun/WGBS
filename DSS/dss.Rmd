@@ -165,7 +165,9 @@ kable(dmls[1:500,], align = 'c', row.names=F) %>%
   add_header_above(header1, align = 'l') %>%
   add_header_above(header2, font_size = "larger", bold = T, align = "l") %>%
   kable_styling(bootstrap_options = c("hover", "condensed", "responsive"), full_width = T) %>%
-  scroll_box(height = "500px")
+  scroll_box(height = "500px") %>%
+  save_kable("Top500_diff_methylated_CpG_sites.pdf")
+  
 ```
 
 ```{r echo = FALSE}
